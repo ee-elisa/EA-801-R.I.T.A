@@ -4,7 +4,7 @@
 
 # RITA
 
-**RITA — Restrição e Implicação da Taxa de Amostragem.**
+**RITA — Redução e Implicação da Taxa de Amostragem.**
 
 Experimento em sistemas embarcados para investigar o impacto de diferentes taxas de amostragem afetam a representação do sinal, volume e fluxo de dados.
 
