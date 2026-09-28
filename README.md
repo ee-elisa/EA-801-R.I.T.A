@@ -44,67 +44,87 @@ Scripts rodando na máquina host permitem:
 - Visualização do sinal;
 - Analise aprimorada.
 ## Diagram
-```mermaid
+``` mermaid
+flowchart TB
 
-flowchart LR
     %% =========================
-    %% RITA - CURRENT PIPELINE
+    %% BITDOGLAB
     %% =========================
 
     subgraph BOARD["BitDogLab / MicroPython"]
         direction TB
 
-        USER["User controls<br/>Joystick Y → sampling rate<br/>Button A → capture<br/>Button B → OLED page"]
+        A["User selects sampling rate<br/>1 / 2 / 4 / 8 kHz"]
 
-        CONFIG["Configure experiment<br/>fs = 1 / 2 / 4 / 8 kHz<br/>duration = 2 s<br/>tone = 200 Hz"]
+        B["Press Button A<br/>Start capture"]
 
-        TONE["Buzzer<br/>200 Hz reference tone"]
+        C["Generate reference tone<br/>200 Hz buzzer"]
 
-        ADC["Microphone ADC"]
+        D["Microphone ADC"]
 
-        SAMPLE["Timed acquisition loop<br/>wait for target timestamp<br/>read ADC<br/>store sample + timestamp"]
+        E["Timed acquisition<br/>Read ADC + timestamp"]
 
-        BUFFER["RAM buffers<br/>ADC values: uint16<br/>timestamps: uint32"]
+        F["RAM buffers<br/>ADC values + timestamps"]
 
-        METRICS["Temporal analysis<br/>effective fs<br/>mean Δt<br/>jitter<br/>max lateness"]
+        G["Temporal analysis<br/>Effective fs<br/>Mean Δt<br/>Jitter<br/>Max lateness"]
 
-        UI["Local feedback<br/>OLED<br/>5×5 LED matrix<br/>RGB LED"]
+        H["Local feedback<br/>OLED + 5x5 matrix + RGB"]
 
-        SERIAL["USB CDC serial<br/>CSV-formatted stream"]
+        I["USB serial transmission"]
 
-        USER --> CONFIG
-        CONFIG --> TONE
-        TONE --> ADC
-        CONFIG --> SAMPLE
-        ADC --> SAMPLE
-        SAMPLE --> BUFFER
-        BUFFER --> METRICS
-        METRICS --> UI
-        BUFFER --> SERIAL
+        A --> B
+        B --> C
+        C --> D
+        D --> E
+        E --> F
+
+        F --> G
+        G --> H
+
+        F --> I
     end
+
+
+    %% =========================
+    %% HOST COMPUTER
+    %% =========================
 
     subgraph PC["Host PC / Python"]
         direction TB
 
-        RX["rita_receiver.py<br/>PySerial"]
+        J["rita_receiver.py"]
 
-        TEMP["Temporary CSV<br/>written line by line"]
+        K["Receive serial stream"]
 
-        DF["Pandas DataFrame<br/>validation + typed columns"]
+        L["Temporary CSV<br/>written line by line"]
 
-        PARQUET["Parquet capture<br/>Snappy compression"]
+        M["Pandas validation<br/>and type conversion"]
 
-        PARTITION["Dataset partition<br/>raw/fs_hz=1000/<br/>raw/fs_hz=2000/<br/>raw/fs_hz=4000/<br/>raw/fs_hz=8000/"]
+        N["Parquet capture"]
 
-        INDEX["captures.csv<br/>capture metadata + summary"]
+        O["Partition dataset<br/>by sampling rate"]
 
-        RX --> TEMP
-        TEMP --> DF
-        DF --> PARQUET
-        PARQUET --> PARTITION
-        DF --> INDEX
+        P["captures.csv<br/>capture metadata"]
+
+        Q["analyze_rita.py"]
+
+        R["Compare sampling rates<br/>Timing • Data volume • Signal"]
+
+        J --> K
+        K --> L
+        L --> M
+
+        M --> N
+        N --> O
+
+        M --> P
+
+        O --> Q
+        P --> Q
+
+        Q --> R
     end
 
-    SERIAL -->|"USB serial"| RX
-```
+
+    I -->|"USB CDC"| J
 ```
